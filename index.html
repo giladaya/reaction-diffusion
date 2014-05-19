@@ -1,0 +1,89 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Diffusion Reaction Simulation</title>
+  <meta name="description" content="Diffusion Reaction Simulation using the Gray-Scott model">
+
+  <style>
+    canvas {
+      border: 1px solid gray;
+    }
+  </style>
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <script src="scripts/gray-scott.js"></script>
+</head>
+
+<body>
+  <canvas></canvas>
+  <script>
+  var W = 400, H = 200;
+  var TIMES = 500, counter = 0;
+  var canvas = document.getElementsByTagName('canvas')[0];
+  var ctx = canvas.getContext("2d");
+  var imageData = ctx.getImageData(0, 0, W, H);
+  var data = imageData.data;
+
+
+  function draw(){
+    var k;
+    for (k = 0; k < 15; k++) {
+      gs.timestep();
+    }
+      
+    // Draw points
+    var y, x, val;
+    for (y = 0; y < H; y++) {
+      for (x = 0; x < W; x++) {
+        var idx = y*W + x;
+        //val = U[idx]*U[idx]*U[idx]/maxU*255;
+        val = 255-(gs.V[idx]*gs.V[idx]/gs.vRange.max*5)*255;
+        // val = gs.V[idx]/gs.vRange.max-gs.vRange.min; //normalize
+        // val = 255-val*255;
+        idx *= 4;
+        data[idx]   = val;    // red
+        data[++idx] = val;    // green
+        data[++idx] = val;    // blue
+        data[++idx] = 255;    // alpha
+        //setPoint(i, j, val, val, val);
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    if (counter++ < TIMES) {
+      requestAnimationFrame(draw);
+    }
+  };
+
+
+  var isPaint = false;
+  canvas.addEventListener('mousemove', function(e) {
+    if (isPaint){
+      x = e.pageX - this.offsetLeft;
+      y = e.pageY - this.offsetTop;
+      gs.setPoint(x, y, 0, 2.0);  
+    }
+  }, false);
+  canvas.addEventListener('mousedown', function(e) {
+    x = e.pageX - this.offsetLeft;
+    y = e.pageY - this.offsetTop;
+    gs.setPoint(x, y, 0, 2.0); 
+    isPaint = true;
+  }, false);
+  canvas.addEventListener('mouseup', function() {
+    isPaint = false;
+  }, false);
+
+
+  var gs = new GrayScott(W, H, 0.055, 0.062, true);
+  //gs.seedUniform(99);
+  requestAnimationFrame(draw);
+
+  </script>
+</body>
+</html>
